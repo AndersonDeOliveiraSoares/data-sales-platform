@@ -99,3 +99,124 @@ def test_delete_produto(db):
     resultado = repository.get_by_id(produto_criado.id_produto)
 
     assert resultado is None
+
+def test_baixar_estoque(db):
+    repository = ProdutoRepository(db)
+
+    produto = Produto(
+        nome_produto="Produto Baixa Estoque",
+        categoria="Teste",
+        subcategoria="Estoque",
+        preco_venda=Decimal("100.00"),
+        preco_custo=Decimal("50.00"),
+        quantidade_estoque=100,
+    )
+
+    produto_criado = repository.create(produto)
+
+    resultado = repository.baixar_estoque(
+        produto_criado.id_produto,
+        10,
+    )
+
+    db.commit()
+
+    assert resultado is True
+
+    produto_atualizado = repository.get_by_id(
+        produto_criado.id_produto
+    )
+
+    assert produto_atualizado is not None
+    assert produto_atualizado.quantidade_estoque == 90
+
+
+def test_baixar_estoque_insuficiente(db):
+    repository = ProdutoRepository(db)
+
+    produto = Produto(
+        nome_produto="Produto Estoque Insuficiente",
+        categoria="Teste",
+        subcategoria="Estoque",
+        preco_venda=Decimal("100.00"),
+        preco_custo=Decimal("50.00"),
+        quantidade_estoque=100,
+    )
+
+    produto_criado = repository.create(produto)
+
+    resultado = repository.baixar_estoque(
+        produto_criado.id_produto,
+        101,
+    )
+
+    db.commit()
+
+    assert resultado is False
+
+    produto_atualizado = repository.get_by_id(
+        produto_criado.id_produto
+    )
+
+    assert produto_atualizado is not None
+    assert produto_atualizado.quantidade_estoque == 100
+
+    def test_baixar_estoque_exatamente_disponivel(db):
+        repository = ProdutoRepository(db)
+
+        produto = Produto(
+            nome_produto="Produto Estoque Exato",
+            categoria="Teste",
+            subcategoria="Estoque",
+            preco_venda=Decimal("100.00"),
+            preco_custo=Decimal("50.00"),
+            quantidade_estoque=10,
+        )
+
+        produto_criado = repository.create(produto)
+
+        resultado = repository.baixar_estoque(
+            produto_criado.id_produto,
+            10,
+        )
+
+        db.commit()
+
+        assert resultado is True
+
+        produto_atualizado = repository.get_by_id(
+            produto_criado.id_produto
+        )
+
+        assert produto_atualizado is not None
+        assert produto_atualizado.quantidade_estoque == 0
+
+def test_baixar_estoque_produto_sem_estoque(db):
+    repository = ProdutoRepository(db)
+
+    produto = Produto(
+        nome_produto="Produto Sem Estoque",
+        categoria="Teste",
+        subcategoria="Estoque",
+        preco_venda=Decimal("100.00"),
+        preco_custo=Decimal("50.00"),
+        quantidade_estoque=0,
+    )
+
+    produto_criado = repository.create(produto)
+
+    resultado = repository.baixar_estoque(
+        produto_criado.id_produto,
+        1,
+    )
+
+    db.commit()
+
+    assert resultado is False
+
+    produto_atualizado = repository.get_by_id(
+        produto_criado.id_produto
+    )
+
+    assert produto_atualizado is not None
+    assert produto_atualizado.quantidade_estoque == 0

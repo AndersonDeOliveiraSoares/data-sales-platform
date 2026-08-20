@@ -4,25 +4,32 @@ from src.database.models.cliente import Cliente
 from src.database.models.item_pedido import ItemPedido
 from src.database.models.pedido import Pedido
 from src.database.models.produto import Produto
-from src.database.repositories.item_pedido_repository import ItemPedidoRepository
+from src.database.repositories.item_pedido_repository import (
+    ItemPedidoRepository,
+)
+
+from tests.conftest import SessionTest
 
 
-def criar_pedido_e_produto(db):
+def criar_cliente(db):
     cliente = Cliente(
         nome="Cliente Item Pedido",
-        cpf_cnpj="22222222222",
-        email="cliente.item@example.com",
+        cpf_cnpj="99999999999",
+        email="cliente.item.pedido@example.com",
     )
 
     db.add(cliente)
     db.commit()
     db.refresh(cliente)
 
+    return cliente
+
+
+def criar_pedido(db, id_cliente):
     pedido = Pedido(
-        id_cliente=cliente.id_cliente,
-        status_pedido="PENDENTE",
-        valor_total=Decimal("3500.00"),
-        valor_frete=Decimal("50.00"),
+        id_cliente=id_cliente,
+        valor_total=Decimal("100.00"),
+        valor_frete=Decimal("10.00"),
         forma_pagamento="PIX",
     )
 
@@ -30,116 +37,245 @@ def criar_pedido_e_produto(db):
     db.commit()
     db.refresh(pedido)
 
+    return pedido
+
+
+def criar_produto(db):
     produto = Produto(
         nome_produto="Produto Item Pedido",
-        categoria="Informática",
-        subcategoria="Acessórios",
-        preco_venda=Decimal("100.00"),
-        preco_custo=Decimal("70.00"),
-        quantidade_estoque=10,
+        categoria="Categoria Teste",
+        subcategoria="Subcategoria Teste",
+        preco_venda=Decimal("50.00"),
+        preco_custo=Decimal("30.00"),
+        quantidade_estoque=100,
     )
 
     db.add(produto)
     db.commit()
     db.refresh(produto)
 
-    return pedido, produto
+    return produto
 
 
-def test_create_item_pedido(db):
-    repository = ItemPedidoRepository(db)
-
-    pedido, produto = criar_pedido_e_produto(db)
-
+def criar_item(db, id_pedido, id_produto):
     item = ItemPedido(
-        id_pedido=pedido.id_pedido,
-        id_produto=produto.id_produto,
-        quantidade=2,
-        preco_unitario=Decimal("100.00"),
-        subtotal=Decimal("200.00"),
-    )
-
-    resultado = repository.create(item)
-
-    assert resultado.id_item_pedido is not None
-    assert resultado.id_pedido == pedido.id_pedido
-    assert resultado.id_produto == produto.id_produto
-    assert resultado.quantidade == 2
-    assert resultado.preco_unitario == Decimal("100.00")
-    assert resultado.subtotal == Decimal("200.00")
-
-
-def test_get_by_id_item_pedido(db):
-    repository = ItemPedidoRepository(db)
-
-    pedido, produto = criar_pedido_e_produto(db)
-
-    item = ItemPedido(
-        id_pedido=pedido.id_pedido,
-        id_produto=produto.id_produto,
-        quantidade=3,
-        preco_unitario=Decimal("50.00"),
-        subtotal=Decimal("150.00"),
-    )
-
-    item_criado = repository.create(item)
-
-    resultado = repository.get_by_id(item_criado.id_item_pedido)
-
-    assert resultado is not None
-    assert resultado.id_item_pedido == item_criado.id_item_pedido
-    assert resultado.quantidade == 3
-    assert resultado.subtotal == Decimal("150.00")
-
-
-def test_get_all_itens_pedido(db):
-    repository = ItemPedidoRepository(db)
-
-    pedido, produto = criar_pedido_e_produto(db)
-
-    item1 = ItemPedido(
-        id_pedido=pedido.id_pedido,
-        id_produto=produto.id_produto,
-        quantidade=1,
-        preco_unitario=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-    )
-
-    item2 = ItemPedido(
-        id_pedido=pedido.id_pedido,
-        id_produto=produto.id_produto,
+        id_pedido=id_pedido,
+        id_produto=id_produto,
         quantidade=2,
         preco_unitario=Decimal("50.00"),
         subtotal=Decimal("100.00"),
     )
 
-    repository.create(item1)
-    repository.create(item2)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
 
-    resultado = repository.get_all()
-
-    assert len(resultado) >= 2
-    assert any(item.quantidade == 1 for item in resultado)
-    assert any(item.quantidade == 2 for item in resultado)
+    return item
 
 
-def test_delete_item_pedido(db):
-    repository = ItemPedidoRepository(db)
+def preparar_dados():
+    db = SessionTest()
 
-    pedido, produto = criar_pedido_e_produto(db)
+    cliente = criar_cliente(db)
+    pedido = criar_pedido(db, cliente.id_cliente)
+    produto = criar_produto(db)
 
-    item = ItemPedido(
-        id_pedido=pedido.id_pedido,
-        id_produto=produto.id_produto,
-        quantidade=1,
-        preco_unitario=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-    )
+    return db, pedido, produto
 
-    item_criado = repository.create(item)
 
-    repository.delete(item_criado)
+def test_create_item_pedido():
+    db, pedido, produto = preparar_dados()
 
-    resultado = repository.get_by_id(item_criado.id_item_pedido)
+    try:
+        repository = ItemPedidoRepository(db)
 
-    assert resultado is None
+        item = ItemPedido(
+            id_pedido=pedido.id_pedido,
+            id_produto=produto.id_produto,
+            quantidade=2,
+            preco_unitario=Decimal("50.00"),
+            subtotal=Decimal("100.00"),
+        )
+
+        resultado = repository.create(item)
+
+        assert resultado.id_item_pedido is not None
+        assert resultado.id_pedido == pedido.id_pedido
+        assert resultado.id_produto == produto.id_produto
+        assert resultado.quantidade == 2
+        assert resultado.preco_unitario == Decimal("50.00")
+        assert resultado.subtotal == Decimal("100.00")
+
+    finally:
+        db.close()
+
+
+def test_get_by_id_item_pedido():
+    db, pedido, produto = preparar_dados()
+
+    try:
+        item = criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        repository = ItemPedidoRepository(db)
+
+        resultado = repository.get_by_id(
+            item.id_item_pedido
+        )
+
+        assert resultado is not None
+        assert resultado.id_item_pedido == item.id_item_pedido
+        assert resultado.id_pedido == pedido.id_pedido
+        assert resultado.id_produto == produto.id_produto
+
+    finally:
+        db.close()
+
+
+def test_get_by_id_item_pedido_inexistente():
+    db = SessionTest()
+
+    try:
+        repository = ItemPedidoRepository(db)
+
+        resultado = repository.get_by_id(999999)
+
+        assert resultado is None
+
+    finally:
+        db.close()
+
+
+def test_get_all_itens_pedido():
+    db, pedido, produto = preparar_dados()
+
+    try:
+        criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        repository = ItemPedidoRepository(db)
+
+        resultado = repository.get_all()
+
+        assert len(resultado) >= 2
+
+    finally:
+        db.close()
+
+
+def test_get_by_pedido():
+    db, pedido, produto = preparar_dados()
+
+    try:
+        criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        repository = ItemPedidoRepository(db)
+
+        resultado = repository.get_by_pedido(
+            pedido.id_pedido
+        )
+
+        assert len(resultado) == 2
+
+        for item in resultado:
+            assert item.id_pedido == pedido.id_pedido
+
+    finally:
+        db.close()
+
+
+def test_get_paginated_item_pedido():
+    db, pedido, produto = preparar_dados()
+
+    try:
+        for _ in range(5):
+            criar_item(
+                db,
+                pedido.id_pedido,
+                produto.id_produto,
+            )
+
+        repository = ItemPedidoRepository(db)
+
+        items, total = repository.get_paginated(
+            page=1,
+            limit=2,
+        )
+
+        assert len(items) == 2
+        assert total >= 5
+
+    finally:
+        db.close()
+
+
+def test_update_item_pedido():
+    db, pedido, produto = preparar_dados()
+
+    try:
+        item = criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        repository = ItemPedidoRepository(db)
+
+        item.quantidade = 3
+        item.preco_unitario = Decimal("50.00")
+        item.subtotal = Decimal("150.00")
+
+        resultado = repository.update(item)
+
+        assert resultado.quantidade == 3
+        assert resultado.preco_unitario == Decimal("50.00")
+        assert resultado.subtotal == Decimal("150.00")
+
+    finally:
+        db.close()
+
+
+def test_delete_item_pedido():
+    db, pedido, produto = preparar_dados()
+
+    try:
+        item = criar_item(
+            db,
+            pedido.id_pedido,
+            produto.id_produto,
+        )
+
+        repository = ItemPedidoRepository(db)
+
+        repository.delete(item)
+
+        resultado = repository.get_by_id(
+            item.id_item_pedido
+        )
+
+        assert resultado is None
+
+    finally:
+        db.close()

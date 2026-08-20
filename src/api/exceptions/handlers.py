@@ -21,6 +21,14 @@ class ClienteAlreadyExistsException(AppException):
 class ProdutoNotFoundException(AppException):
     """Produto não encontrado."""
 
+class PedidoNotFoundException(AppException):
+    """Pedido não encontrado."""
+
+class ItemPedidoNotFoundException(AppException):
+    """Item do pedido não encontrado."""
+
+class EstoqueInsuficienteException(AppException):
+    """Estoque insuficiente para realizar a venda."""
 
 async def cliente_not_found_handler(
     request: Request,
@@ -52,6 +60,39 @@ async def produto_not_found_handler(
 ):
     return JSONResponse(
         status_code=404,
+        content={
+            "detail": exc.message,
+        },
+    )
+
+async def pedido_not_found_handler(
+    request: Request,
+    exc: PedidoNotFoundException,
+):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "detail": exc.message,
+        },
+    )
+
+async def item_pedido_not_found_handler(
+    request: Request,
+    exc: ItemPedidoNotFoundException,
+):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "detail": exc.message,
+        },
+    )
+
+async def estoque_insuficiente_handler(
+    request: Request,
+    exc: EstoqueInsuficienteException,
+):
+    return JSONResponse(
+        status_code=400,
         content={
             "detail": exc.message,
         },
