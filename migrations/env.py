@@ -3,6 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine, pool
 
+import os
+
 from src.database.connection import Base, DATABASE_URL
 
 # Importante: importar os modelos para registrá-los no Base.metadata
@@ -19,7 +21,7 @@ if config.config_file_name is not None:
 
 
 target_metadata = Base.metadata
-
+DATABASE_URL = os.getenv("ALEMBIC_DATABASE_URL", DATABASE_URL)
 
 def run_migrations_offline() -> None:
     """Executa as migrations em modo offline."""

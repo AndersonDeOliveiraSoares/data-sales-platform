@@ -8,3 +8,6 @@ Requires-Dist: sqlalchemy<3.0,>=2.0
 Requires-Dist: psycopg2-binary<3.0,>=2.9
 Requires-Dist: python-dotenv<2.0,>=1.0
 Requires-Dist: pytest<10.0,>=8.0
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: uvicorn[standard]<1.0,>=0.34
+Requires-Dist: httpx2<3.0,>=2.0
