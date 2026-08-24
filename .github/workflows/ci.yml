@@ -27,6 +27,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
 
+      - name: Debug test environment
+        run: |
+          python --version
+          python -m pip --version
+          python -m pytest --version
+          python -m pytest --collect-only -q
+
       - name: Run tests
         run: |
           python -m pytest -q
