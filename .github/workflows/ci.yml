@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      POSTGRES_DB: data_sales
+      POSTGRES_DB: data_sales_test
       POSTGRES_USER: data_sales_user
       POSTGRES_PASSWORD: data_sales_password
       POSTGRES_HOST: localhost
@@ -67,7 +67,12 @@ jobs:
       - name: Run migrations
         run: |
           alembic upgrade head
-
+      - name: Seed database
+        run: |
+          python scripts/seed_database.py
+      - name: Run pipeline
+        run: |
+          python -m src.pipeline
       - name: Run tests
         run: |
           python -m pytest -q
