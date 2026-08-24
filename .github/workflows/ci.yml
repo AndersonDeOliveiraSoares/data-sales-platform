@@ -178,7 +178,7 @@ jobs:
         run: |
           python -m src.pipeline
       
-            - name: Diagnose Parquet after pipeline
+      - name: Diagnose Parquet after pipeline
         run: |
           echo "======================================"
           echo "PARQUET APOS PIPELINE"
