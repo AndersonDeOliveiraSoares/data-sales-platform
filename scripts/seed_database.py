@@ -1,11 +1,40 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from sqlalchemy import text
+
 from src.database.connection import SessionLocal
 from src.database.models.cliente import Cliente
 from src.database.models.item_pedido import ItemPedido
 from src.database.models.pedido import Pedido
 from src.database.models.produto import Produto
+
+
+def limpar_banco(db):
+    """
+    Limpa os dados existentes para permitir que o seed
+    seja executado várias vezes sem gerar conflitos de
+    chave única ou IDs inconsistentes.
+    """
+
+    print("Limpando dados existentes...")
+
+    db.execute(
+        text(
+            """
+            TRUNCATE TABLE
+                item_pedido,
+                pedido,
+                produto,
+                cliente
+            RESTART IDENTITY CASCADE
+            """
+        )
+    )
+
+    db.flush()
+
+    print("Banco limpo com sucesso.")
 
 
 def criar_clientes(db):
@@ -119,7 +148,7 @@ def criar_clientes(db):
 
 
 def criar_produtos(db):
-    produtos = [
+    produtos_data = [
         ("Notebook Dell", "Informática", "Notebook", "3500.00", "2800.00", 30),
         ("Notebook Lenovo", "Informática", "Notebook", "3200.00", "2500.00", 25),
         ("Monitor 24", "Informática", "Monitor", "899.90", "650.00", 40),
@@ -158,7 +187,7 @@ def criar_produtos(db):
             preco_venda,
             preco_custo,
             estoque,
-        ) in produtos
+        ) in produtos_data
     ]
 
     db.add_all(produtos)
@@ -216,13 +245,16 @@ def criar_pedidos(db, clientes, produtos):
     itens = []
 
     for index, (cliente_index, produto_indices) in enumerate(combinacoes):
+
         pedido = Pedido(
             id_cliente=clientes[cliente_index].id_cliente,
             data_pedido=datetime.now() - timedelta(days=15 - index),
             status_pedido=status[index],
             valor_total=Decimal("0.00"),
             valor_frete=Decimal("20.00"),
-            forma_pagamento=formas_pagamento[index % len(formas_pagamento)],
+            forma_pagamento=formas_pagamento[
+                index % len(formas_pagamento)
+            ],
         )
 
         db.add(pedido)
@@ -231,6 +263,7 @@ def criar_pedidos(db, clientes, produtos):
         valor_itens = Decimal("0.00")
 
         for produto_index in produto_indices:
+
             produto = produtos[produto_index]
 
             quantidade = 1 if index % 3 else 2
@@ -255,6 +288,7 @@ def criar_pedidos(db, clientes, produtos):
             itens.append(item)
 
         pedido.valor_total = valor_itens + pedido.valor_frete
+
         pedidos.append(pedido)
 
     db.flush()
@@ -267,6 +301,8 @@ def main():
 
     try:
         print("Iniciando carga de dados...")
+
+        limpar_banco(db)
 
         clientes = criar_clientes(db)
         print(f"Clientes criados: {len(clientes)}")

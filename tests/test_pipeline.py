@@ -1,12 +1,19 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
+
+from src.pipeline import run
 
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 WAREHOUSE_DIR = Path("data/warehouse")
 
+
+@pytest.fixture(scope="module", autouse=True)
+def run_pipeline():
+    run()
 
 def test_raw_files_exist():
 

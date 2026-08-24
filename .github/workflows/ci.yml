@@ -1,3 +1,5 @@
+# GitHub Actions CI
+
 name: CI
 
 on:
@@ -67,12 +69,26 @@ jobs:
       - name: Run migrations
         run: |
           alembic upgrade head
+
+      - name: Check database
+        run: |
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales_test \
+            -c "\dt"
+
       - name: Seed database
         run: |
-          python scripts/seed_database.py
+          python -m scripts.seed_database
+
       - name: Run pipeline
         run: |
           python -m src.pipeline
+
       - name: Run tests
         run: |
           python -m pytest -q
+
