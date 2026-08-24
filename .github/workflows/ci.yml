@@ -13,6 +13,33 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
+    env:
+      POSTGRES_DB: data_sales
+      POSTGRES_USER: data_sales_user
+      POSTGRES_PASSWORD: data_sales_password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5433
+
+      ALEMBIC_DATABASE_URL: postgresql+psycopg2://data_sales_user:data_sales_password@localhost:5433/data_sales_test
+
+    services:
+      postgres:
+        image: postgres:16
+
+        env:
+          POSTGRES_DB: data_sales
+          POSTGRES_USER: data_sales_user
+          POSTGRES_PASSWORD: data_sales_password
+
+        ports:
+          - 5433:5432
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -27,12 +54,19 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
 
-      - name: Debug test environment
+      - name: Create test database
         run: |
-          python --version
-          python -m pip --version
-          python -m pytest --version
-          python -m pytest --collect-only -q
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales \
+            -c "CREATE DATABASE data_sales_test;"
+
+      - name: Run migrations
+        run: |
+          alembic upgrade head
 
       - name: Run tests
         run: |
