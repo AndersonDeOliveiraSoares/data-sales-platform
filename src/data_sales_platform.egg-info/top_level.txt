@@ -1,7 +1,0 @@
-api
-config
-database
-ingestion
-quality
-services
-transformation
