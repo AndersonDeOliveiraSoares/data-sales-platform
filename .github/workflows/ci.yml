@@ -177,6 +177,44 @@ jobs:
       - name: Run pipeline
         run: |
           python -m src.pipeline
+      
+            - name: Diagnose Parquet after pipeline
+        run: |
+          echo "======================================"
+          echo "PARQUET APOS PIPELINE"
+          echo "======================================"
+
+          python -c "
+          import pandas as pd
+          from pathlib import Path
+
+          arquivos = [
+              'data/raw/cliente.parquet',
+              'data/raw/produto.parquet',
+              'data/raw/pedido.parquet',
+              'data/raw/item_pedido.parquet',
+              'data/processed/cliente.parquet',
+              'data/processed/produto.parquet',
+              'data/processed/pedido.parquet',
+              'data/processed/item_pedido.parquet',
+              'data/warehouse/dim_cliente.parquet',
+              'data/warehouse/dim_produto.parquet',
+              'data/warehouse/dim_data.parquet',
+              'data/warehouse/fact_vendas.parquet',
+          ]
+
+          for arquivo in arquivos:
+              path = Path(arquivo)
+
+              print()
+              print(f'=== {arquivo} ===')
+              print(f'Existe: {path.exists()}')
+
+              if path.exists():
+                  df = pd.read_parquet(path)
+                  print(f'Registros: {len(df)}')
+                  print(f'Colunas: {list(df.columns)}')
+          "
 
       - name: Run tests
         run: |
