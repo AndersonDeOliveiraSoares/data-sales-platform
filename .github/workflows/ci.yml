@@ -72,6 +72,8 @@ jobs:
 
       - name: Check database
         run: |
+          echo "=== TABELAS ==="
+
           PGPASSWORD=data_sales_password \
           psql \
             -h localhost \
@@ -84,6 +86,67 @@ jobs:
         run: |
           python -m scripts.seed_database
 
+      - name: Diagnose database after seed
+        run: |
+          echo "======================================"
+          echo "DATABASE APOS SEED"
+          echo "======================================"
+
+          echo ""
+          echo "=== DATABASE ATUAL ==="
+
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales_test \
+            -c "SELECT current_database();"
+
+          echo ""
+          echo "=== CLIENTES ==="
+
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales_test \
+            -c "SELECT COUNT(*) AS clientes FROM cliente;"
+
+          echo ""
+          echo "=== PRODUTOS ==="
+
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales_test \
+            -c "SELECT COUNT(*) AS produtos FROM produto;"
+
+          echo ""
+          echo "=== PEDIDOS ==="
+
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales_test \
+            -c "SELECT COUNT(*) AS pedidos FROM pedido;"
+
+          echo ""
+          echo "=== ITENS PEDIDO ==="
+
+          PGPASSWORD=data_sales_password \
+          psql \
+            -h localhost \
+            -p 5433 \
+            -U data_sales_user \
+            -d data_sales_test \
+            -c "SELECT COUNT(*) AS itens FROM item_pedido;"
+
       - name: Run pipeline
         run: |
           python -m src.pipeline
@@ -91,4 +154,3 @@ jobs:
       - name: Run tests
         run: |
           python -m pytest -q
-
