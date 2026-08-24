@@ -29,7 +29,9 @@ jobs:
         image: postgres:16
 
         env:
-          POSTGRES_DB: data_sales
+          # 🔴 ALTERADO:
+          # antes: data_sales
+          POSTGRES_DB: data_sales_test
           POSTGRES_USER: data_sales_user
           POSTGRES_PASSWORD: data_sales_password
 
@@ -56,15 +58,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
 
-      - name: Create test database
-        run: |
-          PGPASSWORD=data_sales_password \
-          psql \
-            -h localhost \
-            -p 5433 \
-            -U data_sales_user \
-            -d data_sales \
-            -c "CREATE DATABASE data_sales_test;"
+      # 🔴 REMOVIDO:
+      # Não precisamos mais criar data_sales_test manualmente.
+      # O PostgreSQL já inicia com esse banco.
 
       - name: Run migrations
         run: |
