@@ -143,6 +143,37 @@ jobs:
             -d data_sales_test \
             -c "SELECT COUNT(*) AS itens FROM item_pedido;"
 
+      - name: Diagnose Python database connection
+        run: |
+          python -c "
+          from src.database.connection import DATABASE_URL
+          from sqlalchemy import text
+          from src.database.connection import engine
+
+          print('DATABASE_URL usada pelo Python:')
+          print(DATABASE_URL)
+
+          with engine.connect() as connection:
+              result = connection.execute(text('SELECT current_database()'))
+              print('Banco conectado pelo Python:')
+              print(result.scalar())
+
+              result = connection.execute(text('SELECT COUNT(*) FROM cliente'))
+              print('Clientes vistos pelo Python:')
+              print(result.scalar())
+
+              result = connection.execute(text('SELECT COUNT(*) FROM produto'))
+              print('Produtos vistos pelo Python:')
+              print(result.scalar())
+
+              result = connection.execute(text('SELECT COUNT(*) FROM pedido'))
+              print('Pedidos vistos pelo Python:')
+              print(result.scalar())
+
+              result = connection.execute(text('SELECT COUNT(*) FROM item_pedido'))
+              print('Itens vistos pelo Python:')
+              print(result.scalar())
+          "
       - name: Run pipeline
         run: |
           python -m src.pipeline
