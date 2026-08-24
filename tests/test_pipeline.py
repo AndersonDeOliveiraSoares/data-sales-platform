@@ -11,11 +11,12 @@ PROCESSED_DIR = Path("data/processed")
 WAREHOUSE_DIR = Path("data/warehouse")
 
 
-@pytest.fixture(scope="module", autouse=True)
-def run_pipeline():
+@pytest.fixture(scope="module")
+def pipeline():
     run()
 
-def test_raw_files_exist():
+
+def test_raw_files_exist(pipeline):
 
     expected_files = [
         "cliente.parquet",
@@ -30,7 +31,7 @@ def test_raw_files_exist():
         assert file_path.exists()
 
 
-def test_processed_files_exist():
+def test_processed_files_exist(pipeline):
 
     expected_files = [
         "cliente.parquet",
@@ -45,7 +46,7 @@ def test_processed_files_exist():
         assert file_path.exists()
 
 
-def test_warehouse_files_exist():
+def test_warehouse_files_exist(pipeline):
 
     expected_files = [
         "dim_cliente.parquet",
@@ -60,7 +61,7 @@ def test_warehouse_files_exist():
         assert file_path.exists()
 
 
-def test_raw_record_counts():
+def test_raw_record_counts(pipeline):
 
     expected_counts = {
         "cliente": 10,
@@ -78,7 +79,7 @@ def test_raw_record_counts():
         assert len(df) == expected_count
 
 
-def test_processed_record_counts():
+def test_processed_record_counts(pipeline):
 
     expected_counts = {
         "cliente": 10,
@@ -99,7 +100,7 @@ def test_processed_record_counts():
         assert len(df) == expected_count
 
 
-def test_warehouse_record_counts():
+def test_warehouse_record_counts(pipeline):
 
     expected_counts = {
         "dim_cliente": 10,
@@ -120,7 +121,7 @@ def test_warehouse_record_counts():
         assert len(df) == expected_count
 
 
-def test_fact_vendas_relationships():
+def test_fact_vendas_relationships(pipeline):
 
     fact_vendas = pd.read_parquet(
         WAREHOUSE_DIR / "fact_vendas.parquet"
