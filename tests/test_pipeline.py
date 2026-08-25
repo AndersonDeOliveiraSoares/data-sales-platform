@@ -1,8 +1,10 @@
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
+import pytest
+from conftest import clear_database
+from scripts.seed_database import main as run_seed
 from src.pipeline import run
 
 RAW_DIR = Path("data/raw")
@@ -11,8 +13,15 @@ WAREHOUSE_DIR = Path("data/warehouse")
 
 @pytest.fixture(scope="module")
 def pipeline():
-    print("\n=== PIPELINE FIXTURE ===")
-    print("Executando pipeline...")
+    print("\n=== PREPARANDO BANCO E EXECUÇÃO DA PIPELINE ===")
+
+    # 1. Limpa tabelas
+    clear_database()
+
+    # 2. Roda o seed original
+    run_seed()
+
+    # 3. Executa a pipeline
 
     run()
 
