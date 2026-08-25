@@ -4,8 +4,6 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from src.database.connection import Base
-
 
 TEST_DATABASE_URL = os.getenv(
     "ALEMBIC_DATABASE_URL",
@@ -26,8 +24,7 @@ SessionTest = sessionmaker(
 )
 
 
-@pytest.fixture(autouse=True)
-def clean_database():
+def clear_database():
     with test_engine.begin() as connection:
         connection.execute(
             text(
@@ -42,7 +39,26 @@ def clean_database():
             )
         )
 
+
+@pytest.fixture(autouse=True)
+def clean_database(request):
+
+    test_file = request.node.fspath.basename
+
+    pipeline_tests = {
+        "test_pipeline.py",
+        "test_pipeline_integration.py",
+    }
+
+    if test_file in pipeline_tests:
+        yield
+        return
+
+    clear_database()
+
     yield
+
+    clear_database()
 
 
 @pytest.fixture

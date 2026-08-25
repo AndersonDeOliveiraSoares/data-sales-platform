@@ -13,6 +13,29 @@ WAREHOUSE_DIR = Path("data/warehouse")
 def test_pipeline_integration():
 
     run()
+    print("\n=== PARQUET APÓS RUN() NO TESTE DE INTEGRAÇÃO ===")
+
+    for file_name in [
+        "cliente.parquet",
+        "produto.parquet",
+        "pedido.parquet",
+        "item_pedido.parquet",
+    ]:
+        file_path = RAW_DIR / file_name
+
+        df = pd.read_parquet(file_path)
+
+        print(
+            f"{file_path}: {len(df)} registros"
+        )
+
+    fact_vendas = pd.read_parquet(
+        WAREHOUSE_DIR / "fact_vendas.parquet"
+    )
+
+    print(
+        f"fact_vendas: {len(fact_vendas)} registros"
+    )
 
     expected_raw_files = [
         "cliente.parquet",
