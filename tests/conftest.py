@@ -7,7 +7,11 @@ from sqlalchemy.orm import sessionmaker
 
 TEST_DATABASE_URL = os.getenv(
     "ALEMBIC_DATABASE_URL",
-    "postgresql+psycopg2://data_sales_user:data_sales_password@localhost:5433/data_sales_test",
+    (
+        "postgresql+psycopg2://"
+        "data_sales_user:data_sales_password@"
+        "localhost:5433/data_sales_test"
+    ),
 )
 
 
@@ -24,7 +28,13 @@ SessionTest = sessionmaker(
 )
 
 
-def clear_database():
+PIPELINE_TESTS = {
+    "test_pipeline.py",
+    "test_pipeline_integration.py",
+}
+
+
+def clear_database() -> None:
     with test_engine.begin() as connection:
         connection.execute(
             text(
@@ -43,14 +53,9 @@ def clear_database():
 @pytest.fixture(autouse=True)
 def clean_database(request):
 
-    test_file = request.node.fspath.basename
+    test_file = request.node.path.name
 
-    pipeline_tests = {
-        "test_pipeline.py",
-        "test_pipeline_integration.py",
-    }
-
-    if test_file in pipeline_tests:
+    if test_file in PIPELINE_TESTS:
         yield
         return
 
@@ -70,3 +75,4 @@ def db():
     finally:
         session.rollback()
         session.close()
+
