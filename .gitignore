@@ -1,5 +1,6 @@
 # Environment
 .env
+.env.test
 
 # Python
 __pycache__/
@@ -22,5 +23,5 @@ data/warehouse/
 # Logs
 logs/
 
-# Python package
+# Python packageg
 *.egg-info/
