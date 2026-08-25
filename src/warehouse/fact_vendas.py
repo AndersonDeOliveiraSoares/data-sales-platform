@@ -206,5 +206,9 @@ def run() -> None:
 
     save_fact_vendas(fact_vendas)
 
+    records = len(fact_vendas)
+    logger.info("Fact Vendas concluída | records=%d", records, )
+    return records
+
 if __name__ == "__main__":
     run()

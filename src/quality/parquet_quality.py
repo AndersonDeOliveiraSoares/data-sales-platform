@@ -185,10 +185,12 @@ def validate_duplicates(
 
 
 def validate_table(
-    table_name: str,
-) -> None:
+table_name: str,
+) -> int:
 
-    file_path = RAW_DIR / f"{table_name}.parquet"
+    file_path = (
+        RAW_DIR / f"{table_name}.parquet"
+    )
 
     if not file_path.exists():
         raise FileNotFoundError(
@@ -208,6 +210,7 @@ def validate_table(
     )
 
     if table_name in NON_NEGATIVE_COLUMNS:
+
         validate_non_negative(
             df,
             table_name,
@@ -215,6 +218,7 @@ def validate_table(
         )
 
     if table_name in POSITIVE_COLUMNS:
+
         validate_positive(
             df,
             table_name,
@@ -222,25 +226,42 @@ def validate_table(
         )
 
     if table_name in UNIQUE_COLUMNS:
+
         validate_duplicates(
             df,
             table_name,
             UNIQUE_COLUMNS[table_name],
         )
 
+    records = len(df)
+
     logger.info(
-        "%s: OK - %s registros",
+        "%s: OK | records=%d",
         table_name,
-        len(df),
+        records,
     )
 
+    return records
 
-def run() -> None:
+def run() -> int:
+
+    total_records = 0
 
     for table_name in REQUIRED_COLUMNS:
-        validate_table(table_name)
 
-    logger.info("Data Quality: OK")
+        records = validate_table(
+            table_name,
+        )
+
+        total_records += records
+
+    logger.info(
+        "Data Quality concluída | "
+        "records=%d",
+        total_records,
+    )
+
+    return total_records
 
 
 if __name__ == "__main__":

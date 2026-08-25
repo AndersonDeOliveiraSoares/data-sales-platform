@@ -11,9 +11,13 @@ class PipelineMetrics:
     def __init__(self) -> None:
         self.start_time = perf_counter()
 
-    def start_step(self, step_name: str) -> float:
+    def start_step(
+        self,
+        step_name: str,
+    ) -> float:
+
         logger.info(
-            "Iniciando etapa: %s",
+            "Etapa iniciada | step=%s",
             step_name,
         )
 
@@ -23,21 +27,39 @@ class PipelineMetrics:
         self,
         step_name: str,
         start_time: float,
+        records: int | None = None,
     ) -> None:
 
         duration = perf_counter() - start_time
 
-        logger.info(
-            "Etapa concluída: %s | duração=%.2fs",
-            step_name,
-            duration,
-        )
+        if records is not None:
+
+            logger.info(
+                "Etapa concluída | "
+                "step=%s | "
+                "records=%d | "
+                "duration=%.2fs",
+                step_name,
+                records,
+                duration,
+            )
+
+        else:
+
+            logger.info(
+                "Etapa concluída | "
+                "step=%s | "
+                "duration=%.2fs",
+                step_name,
+                duration,
+            )
 
     def finish(self) -> None:
 
         duration = perf_counter() - self.start_time
 
         logger.info(
-            "Pipeline finalizado | duração_total=%.2fs",
+            "Pipeline finalizado | "
+            "duration=%.2fs",
             duration,
         )

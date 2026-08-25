@@ -68,7 +68,7 @@ def save_processed_table(
 
 
 def run() -> None:
-
+    total_records = 0
     for table_name in TABLES:
         df = read_raw_table(table_name)
 
@@ -85,6 +85,9 @@ def run() -> None:
             df,
             table_name,
         )
+        total_records += len(df)
+        logger.info("Transformation concluída | records=%d", total_records, )
+        return total_records
 
 
 if __name__ == "__main__":

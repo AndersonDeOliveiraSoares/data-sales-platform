@@ -68,10 +68,12 @@ def save_dim_cliente(
 def run() -> None:
 
     df = read_processed_cliente()
-
     dim_cliente = transform_dim_cliente(df)
-
     save_dim_cliente(dim_cliente)
+
+    records = len(dim_cliente)
+    logger.info("Dimensão Cliente concluída | records=%d", records, )
+    return records
 
 if __name__ == "__main__":
     run()

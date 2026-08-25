@@ -72,6 +72,10 @@ def run() -> None:
 
     save_dim_produto(dim_produto)
 
+    records = len(dim_produto)
+    logger.info("Dimensão Produto concluída | records=%d", records, )
+    return records
+
 
 if __name__ == "__main__":
     run()

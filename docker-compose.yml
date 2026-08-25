@@ -1,4 +1,5 @@
 services:
+
   postgres:
     image: postgres:16
     container_name: data-sales-postgres
@@ -13,6 +14,48 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: data-sales-pipeline
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+    command:
+      [
+        "sh",
+        "-c",
+        "alembic upgrade head && python -m scripts.seed_database && python -m src.pipeline"
+      ]
+
 
 volumes:
   postgres_data:

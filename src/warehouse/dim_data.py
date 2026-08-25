@@ -71,6 +71,11 @@ def run() -> None:
     dim_data = transform_dim_data(df)
     save_dim_data(dim_data)
 
+    records = len(dim_data)
+    logger.info("Dimensão Data concluída | records=%d", records, )
+    return records
+
+
 
 if __name__ == "__main__":
     run()
