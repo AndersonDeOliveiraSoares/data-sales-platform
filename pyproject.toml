@@ -27,3 +27,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "integration: testes de integração com PostgreSQL",
+]
