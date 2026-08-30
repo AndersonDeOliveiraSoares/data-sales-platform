@@ -18,6 +18,7 @@ from src.api.routes.item_pedido_routes import router as item_pedido_router
 from src.api.routes.cliente_routes import router as cliente_router
 from src.api.routes.pedido_routes import router as pedido_router
 from src.api.routes.produto_routes import router as produto_router
+from src.api.routes.analytics_routes import router as analytics_router
 
 
 app = FastAPI(
@@ -60,3 +61,4 @@ app.include_router(cliente_router)
 app.include_router(produto_router)
 app.include_router(pedido_router)
 app.include_router(item_pedido_router)
+app.include_router(analytics_router)
