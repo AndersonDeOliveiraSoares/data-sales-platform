@@ -4,6 +4,7 @@ import streamlit as st
 from src.analytics.service import (
     get_sales_summary_service,
     get_sales_by_product_service,
+    get_sales_by_customer_service,
     get_sales_by_month_service,
 )
 
@@ -118,6 +119,42 @@ if produtos:
 
     st.bar_chart(
         df_produtos.set_index("nome_produto")["receita"]
+    )
+
+else:
+    st.info(
+        f"Nenhuma venda encontrada para {mes:02d}/{ano}."
+    )
+
+
+st.divider()
+
+
+# ============================================================
+# RANKING DE CLIENTES
+# ============================================================
+
+st.subheader("👥 Ranking de Clientes")
+
+
+clientes = get_sales_by_customer_service(
+    ano=ano,
+    mes=mes,
+)
+
+
+if clientes:
+    df_clientes = pd.DataFrame(clientes)
+
+    st.dataframe(
+        df_clientes,
+        use_container_width=True,
+    )
+
+    st.subheader("💰 Receita por Cliente")
+
+    st.bar_chart(
+        df_clientes.set_index("nome_cliente")["receita"]
     )
 
 else:
