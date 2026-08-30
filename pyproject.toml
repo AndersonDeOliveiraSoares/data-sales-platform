@@ -19,6 +19,7 @@ dependencies = [
     "httpx>=0.28,<1.0",
     "pandas>=2.2,<3.0",
     "pyarrow>=18,<25.0",
+    "streamlit>=1.40,<2.0",
 ]
 
 [tool.setuptools.packages.find]

@@ -25,3 +25,4 @@ logs/
 
 # Python packageg
 *.egg-info/
+resultado_testes.txt
