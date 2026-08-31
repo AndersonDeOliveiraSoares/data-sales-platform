@@ -1,10 +1,12 @@
 from src.ingestion.postgres_to_parquet import run as run_ingestion
 from src.quality.parquet_quality import run as run_quality
 from src.transformation.raw_to_processed import run as run_transformation
+
 from src.warehouse.dim_cliente import run as run_dim_cliente
 from src.warehouse.dim_produto import run as run_dim_produto
 from src.warehouse.dim_data import run as run_dim_data
 from src.warehouse.fact_vendas import run as run_fact_vendas
+from src.warehouse.postgres_loader import run as run_postgres_loader
 
 from src.utils.logger import get_logger, setup_logging
 from src.utils.metrics import PipelineMetrics
@@ -24,79 +26,90 @@ def run() -> None:
     try:
 
         step_start = metrics.start_step(
-            "1/7 - Ingestion"
+            "1/8 - Ingestion"
         )
 
         run_ingestion()
 
         metrics.end_step(
-            "1/7 - Ingestion",
+            "1/8 - Ingestion",
             step_start,
         )
 
         step_start = metrics.start_step(
-            "2/7 - Data Quality"
+            "2/8 - Data Quality"
         )
 
         run_quality()
 
         metrics.end_step(
-            "2/7 - Data Quality",
+            "2/8 - Data Quality",
             step_start,
         )
 
         step_start = metrics.start_step(
-            "3/7 - Transformation"
+            "3/8 - Transformation"
         )
 
         run_transformation()
 
         metrics.end_step(
-            "3/7 - Transformation",
+            "3/8 - Transformation",
             step_start,
         )
 
         step_start = metrics.start_step(
-            "4/7 - Dimensão Cliente"
+            "4/8 - Dimensão Cliente"
         )
 
         run_dim_cliente()
 
         metrics.end_step(
-            "4/7 - Dimensão Cliente",
+            "4/8 - Dimensão Cliente",
             step_start,
         )
 
         step_start = metrics.start_step(
-            "5/7 - Dimensão Produto"
+            "5/8 - Dimensão Produto"
         )
 
         run_dim_produto()
 
         metrics.end_step(
-            "5/7 - Dimensão Produto",
+            "5/8 - Dimensão Produto",
             step_start,
         )
 
         step_start = metrics.start_step(
-            "6/7 - Dimensão Data"
+            "6/8 - Dimensão Data"
         )
 
         run_dim_data()
 
         metrics.end_step(
-            "6/7 - Dimensão Data",
+            "6/8 - Dimensão Data",
             step_start,
         )
 
         step_start = metrics.start_step(
-            "7/7 - Fact Vendas"
+            "7/8 - Fact Vendas"
         )
 
         run_fact_vendas()
 
         metrics.end_step(
-            "7/7 - Fact Vendas",
+            "7/8 - Fact Vendas",
+            step_start,
+        )
+
+        step_start = metrics.start_step(
+            "8/8 - PostgreSQL Data Warehouse"
+        )
+
+        run_postgres_loader()
+
+        metrics.end_step(
+            "8/8 - PostgreSQL Data Warehouse",
             step_start,
         )
 

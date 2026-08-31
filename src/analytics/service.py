@@ -3,6 +3,7 @@ from src.analytics.queries import (
     get_sales_by_customer,
     get_sales_summary,
     get_sales_by_month,
+    get_available_years,
 )
 
 
@@ -38,3 +39,6 @@ def get_sales_by_customer_service(
 
 def get_sales_by_month_service():
     return get_sales_by_month()
+
+def get_available_years_service():
+    return get_available_years()

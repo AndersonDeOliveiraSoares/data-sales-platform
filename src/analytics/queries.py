@@ -152,3 +152,22 @@ def get_sales_by_month():
         result = connection.execute(query)
 
         return result.mappings().all()
+
+def get_available_years():
+    query = text(
+        """
+        SELECT DISTINCT
+            ano
+        FROM dw.fact_vendas
+        WHERE ano IS NOT NULL
+        ORDER BY ano DESC
+        """
+    )
+
+    with engine.connect() as connection:
+        result = connection.execute(query)
+
+        return [
+            row["ano"]
+            for row in result.mappings().all()
+        ]

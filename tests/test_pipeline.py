@@ -1,73 +1,68 @@
 from pathlib import Path
 
 import pandas as pd
-
 import pytest
+
 from conftest import clear_database
 from scripts.seed_database import main as run_seed
 from src.pipeline import run
+
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 WAREHOUSE_DIR = Path("data/warehouse")
 
+
 @pytest.fixture(scope="module")
 def pipeline():
     print("\n=== PREPARANDO BANCO E EXECUÇÃO DA PIPELINE ===")
 
-    # 1. Limpa tabelas
     clear_database()
 
-    # 2. Roda o seed original
     run_seed()
-
-    # 3. Executa a pipeline
 
     run()
 
-    print("\n=== PARQUETS APOS PIPELINE ===")
+    print("\n=== PARQUETS APÓS PIPELINE ===")
 
-    for file_name in [
-        "cliente.parquet",
-        "produto.parquet",
-        "pedido.parquet",
-        "item_pedido.parquet",
+    for directory, files in [
+        (
+            RAW_DIR,
+            [
+                "cliente.parquet",
+                "produto.parquet",
+                "pedido.parquet",
+                "item_pedido.parquet",
+            ],
+        ),
+        (
+            PROCESSED_DIR,
+            [
+                "cliente.parquet",
+                "produto.parquet",
+                "pedido.parquet",
+                "item_pedido.parquet",
+            ],
+        ),
+        (
+            WAREHOUSE_DIR,
+            [
+                "dim_cliente.parquet",
+                "dim_produto.parquet",
+                "dim_data.parquet",
+                "fact_vendas.parquet",
+            ],
+        ),
     ]:
-        file_path = RAW_DIR / file_name
+        for file_name in files:
+            file_path = directory / file_name
 
-        if file_path.exists():
-            df = pd.read_parquet(file_path)
-            print(f"{file_path}: {len(df)} registros")
-        else:
-            print(f"{file_path}: NAO EXISTE")
+            if file_path.exists():
+                df = pd.read_parquet(file_path)
+                print(f"{file_path}: {len(df)} registros")
+            else:
+                print(f"{file_path}: NÃO EXISTE")
 
-    for file_name in [
-        "cliente.parquet",
-        "produto.parquet",
-        "pedido.parquet",
-        "item_pedido.parquet",
-    ]:
-        file_path = PROCESSED_DIR / file_name
-
-        if file_path.exists():
-            df = pd.read_parquet(file_path)
-            print(f"{file_path}: {len(df)} registros")
-        else:
-            print(f"{file_path}: NAO EXISTE")
-
-    for file_name in [
-        "dim_cliente.parquet",
-        "dim_produto.parquet",
-        "dim_data.parquet",
-        "fact_vendas.parquet",
-    ]:
-        file_path = WAREHOUSE_DIR / file_name
-
-        if file_path.exists():
-            df = pd.read_parquet(file_path)
-            print(f"{file_path}: {len(df)} registros")
-        else:
-            print(f"{file_path}: NAO EXISTE")
 
 def test_raw_files_exist(pipeline):
     expected_files = [
@@ -82,8 +77,8 @@ def test_raw_files_exist(pipeline):
 
         assert file_path.exists()
 
-def test_processed_files_exist(pipeline):
 
+def test_processed_files_exist(pipeline):
     expected_files = [
         "cliente.parquet",
         "produto.parquet",
@@ -96,8 +91,8 @@ def test_processed_files_exist(pipeline):
 
         assert file_path.exists()
 
-def test_warehouse_files_exist(pipeline):
 
+def test_warehouse_files_exist(pipeline):
     expected_files = [
         "dim_cliente.parquet",
         "dim_produto.parquet",
@@ -110,19 +105,18 @@ def test_warehouse_files_exist(pipeline):
 
         assert file_path.exists()
 
-def test_raw_record_counts(pipeline):
 
+def test_raw_record_counts(pipeline):
     print("\n=== TESTE RAW RECORD COUNTS ===")
 
     expected_counts = {
         "cliente": 10,
         "produto": 20,
-        "pedido": 15,
-        "item_pedido": 30,
+        "pedido": 978,
+        "item_pedido": 2909,
     }
 
     for table_name, expected_count in expected_counts.items():
-
         file_path = RAW_DIR / f"{table_name}.parquet"
 
         df = pd.read_parquet(file_path)
@@ -135,22 +129,19 @@ def test_raw_record_counts(pipeline):
 
         assert len(df) == expected_count
 
+
 def test_processed_record_counts(pipeline):
     print("\n=== TESTE PROCESSED RECORD COUNTS ===")
 
     expected_counts = {
         "cliente": 10,
         "produto": 20,
-        "pedido": 15,
-        "item_pedido": 30,
+        "pedido": 978,
+        "item_pedido": 2909,
     }
 
     for table_name, expected_count in expected_counts.items():
-
-        file_path = (
-            PROCESSED_DIR
-            / f"{table_name}.parquet"
-        )
+        file_path = PROCESSED_DIR / f"{table_name}.parquet"
 
         df = pd.read_parquet(file_path)
 
@@ -161,6 +152,7 @@ def test_processed_record_counts(pipeline):
         )
 
         assert len(df) == expected_count
+
 
 def test_warehouse_record_counts(pipeline):
     print("\n=== TESTE WAREHOUSE RECORD COUNTS ===")
@@ -168,16 +160,11 @@ def test_warehouse_record_counts(pipeline):
     expected_counts = {
         "dim_cliente": 10,
         "dim_produto": 20,
-        "dim_data": 15,
-        "fact_vendas": 30,
+        "fact_vendas": 2909,
     }
 
     for table_name, expected_count in expected_counts.items():
-
-        file_path = (
-            WAREHOUSE_DIR
-            / f"{table_name}.parquet"
-        )
+        file_path = WAREHOUSE_DIR / f"{table_name}.parquet"
 
         df = pd.read_parquet(file_path)
 
@@ -188,6 +175,63 @@ def test_warehouse_record_counts(pipeline):
         )
 
         assert len(df) == expected_count
+
+
+def test_warehouse_data_period(pipeline):
+    print("\n=== TESTE PERÍODO DOS DADOS ===")
+
+    fact_vendas = pd.read_parquet(
+        WAREHOUSE_DIR / "fact_vendas.parquet"
+    )
+
+    primeira_data = fact_vendas["data"].min()
+    ultima_data = fact_vendas["data"].max()
+
+    assert primeira_data.year == 2024
+    assert primeira_data.month == 9
+
+    assert ultima_data.year == 2026
+    assert ultima_data.month == 8
+
+
+def test_warehouse_contains_24_months(pipeline):
+    print("\n=== TESTE 24 MESES ===")
+
+    fact_vendas = pd.read_parquet(
+        WAREHOUSE_DIR / "fact_vendas.parquet"
+    )
+
+    meses = (
+        fact_vendas[["ano", "mes"]]
+        .drop_duplicates()
+        .sort_values(["ano", "mes"])
+    )
+
+    assert len(meses) == 24
+
+
+def test_december_has_higher_sales_volume(pipeline):
+    print("\n=== TESTE SAZONALIDADE DE DEZEMBRO ===")
+
+    fact_vendas = pd.read_parquet(
+        WAREHOUSE_DIR / "fact_vendas.parquet"
+    )
+
+    vendas_por_mes = (
+        fact_vendas.groupby(["ano", "mes"])["quantidade"]
+        .sum()
+        .reset_index()
+    )
+
+    dezembro = vendas_por_mes[
+        vendas_por_mes["mes"] == 12
+    ]["quantidade"].sum()
+
+    outros_meses = vendas_por_mes[
+        vendas_por_mes["mes"] != 12
+    ]["quantidade"].mean()
+
+    assert dezembro > outros_meses
 
 
 def test_fact_vendas_relationships(pipeline):
@@ -237,3 +281,20 @@ def test_fact_vendas_relationships(pipeline):
         dim_data["data"]
     ).all()
 
+
+def test_fact_vendas_values(pipeline):
+    print("\n=== TESTE VALORES FACT VENDAS ===")
+
+    fact_vendas = pd.read_parquet(
+        WAREHOUSE_DIR / "fact_vendas.parquet"
+    )
+
+    assert fact_vendas["quantidade"].gt(0).all()
+
+    assert fact_vendas["receita"].ge(0).all()
+
+    assert fact_vendas["custo_total"].ge(0).all()
+
+    assert fact_vendas["lucro"].notna().all()
+
+    assert fact_vendas["margem"].notna().all()

@@ -82,7 +82,3 @@ def run() -> int:
     )
 
     return total_records
-
-
-if __name__ == "__main__":
-    run()

@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+import random
 from decimal import Decimal
 
 from sqlalchemy import text
@@ -35,7 +36,6 @@ def limpar_banco(db):
     db.flush()
 
     print("Banco limpo com sucesso.")
-
 
 def criar_clientes(db):
     clientes = [
@@ -146,7 +146,6 @@ def criar_clientes(db):
 
     return clientes
 
-
 def criar_produtos(db):
     produtos_data = [
         ("Notebook Dell", "Informática", "Notebook", "3500.00", "2800.00", 30),
@@ -195,47 +194,22 @@ def criar_produtos(db):
 
     return produtos
 
-
 def criar_pedidos(db, clientes, produtos):
-    combinacoes = [
-        (0, [0, 6]),
-        (1, [2, 4]),
-        (2, [1, 7]),
-        (3, [3, 5]),
-        (4, [8, 9]),
-        (5, [10, 13]),
-        (6, [11, 14]),
-        (7, [12, 16]),
-        (8, [15, 17]),
-        (9, [18, 19]),
-        (0, [0, 2]),
-        (1, [6, 8]),
-        (2, [4, 10]),
-        (3, [7, 11]),
-        (4, [3, 14]),
-    ]
+    random.seed(42)
+
+    data_inicio = date(2024, 9, 1)
+    data_fim = date(2026, 8, 31)
 
     status = [
         "FINALIZADO",
         "FINALIZADO",
-        "PENDENTE",
         "FINALIZADO",
         "ENVIADO",
-        "FINALIZADO",
         "PENDENTE",
-        "FINALIZADO",
         "CANCELADO",
-        "FINALIZADO",
-        "PENDENTE",
-        "ENVIADO",
-        "FINALIZADO",
-        "PENDENTE",
-        "FINALIZADO",
     ]
 
     formas_pagamento = [
-        "PIX",
-        "CARTAO",
         "PIX",
         "CARTAO",
         "BOLETO",
@@ -244,57 +218,167 @@ def criar_pedidos(db, clientes, produtos):
     pedidos = []
     itens = []
 
-    for index, (cliente_index, produto_indices) in enumerate(combinacoes):
+    data_atual = data_inicio
 
-        pedido = Pedido(
-            id_cliente=clientes[cliente_index].id_cliente,
-            data_pedido=datetime.now() - timedelta(days=15 - index),
-            status_pedido=status[index],
-            valor_total=Decimal("0.00"),
-            valor_frete=Decimal("20.00"),
-            forma_pagamento=formas_pagamento[
-                index % len(formas_pagamento)
-            ],
+    while data_atual <= data_fim:
+
+        ano = data_atual.year
+        mes = data_atual.month
+
+        # ----------------------------------------------------
+        # SAZONALIDADE
+        # ----------------------------------------------------
+
+        fator_sazonalidade = {
+            1: 0.80,
+            2: 0.85,
+            3: 0.95,
+            4: 0.90,
+            5: 1.00,
+            6: 1.05,
+            7: 1.10,
+            8: 1.00,
+            9: 1.05,
+            10: 1.15,
+            11: 1.70,
+            12: 2.40,
+        }[mes]
+
+        pedidos_base = 35
+
+        quantidade_pedidos = int(
+            pedidos_base * fator_sazonalidade
         )
 
-        db.add(pedido)
-        db.flush()
+        # Pequena variação natural
+        quantidade_pedidos += random.randint(-4, 4)
 
-        valor_itens = Decimal("0.00")
+        for _ in range(quantidade_pedidos):
 
-        for produto_index in produto_indices:
-
-            produto = produtos[produto_index]
-
-            quantidade = 1 if index % 3 else 2
-
-            preco_unitario = produto.preco_venda
-            subtotal = preco_unitario * quantidade
-
-            item = ItemPedido(
-                id_pedido=pedido.id_pedido,
-                id_produto=produto.id_produto,
-                quantidade=quantidade,
-                preco_unitario=preco_unitario,
-                subtotal=subtotal,
+            dia = random.randint(
+                1,
+                28,
             )
 
-            db.add(item)
+            data_pedido = datetime(
+                ano,
+                mes,
+                dia,
+                random.randint(8, 20),
+                random.randint(0, 59),
+            )
 
-            valor_itens += subtotal
+            cliente = random.choice(clientes)
 
-            produto.quantidade_estoque -= quantidade
+            pedido = Pedido(
+                id_cliente=cliente.id_cliente,
+                data_pedido=data_pedido,
+                status_pedido=random.choices(
+                    status,
+                    weights=[
+                        65,
+                        15,
+                        8,
+                        6,
+                        4,
+                        2,
+                    ],
+                    k=1,
+                )[0],
+                valor_total=Decimal("0.00"),
+                valor_frete=Decimal(
+                    random.choice(
+                        [
+                            "0.00",
+                            "15.00",
+                            "20.00",
+                            "25.00",
+                            "30.00",
+                        ]
+                    )
+                ),
+                forma_pagamento=random.choice(
+                    formas_pagamento
+                ),
+            )
 
-            itens.append(item)
+            db.add(pedido)
+            db.flush()
 
-        pedido.valor_total = valor_itens + pedido.valor_frete
+            quantidade_itens = random.randint(1, 5)
 
-        pedidos.append(pedido)
+            produtos_pedido = random.sample(
+                produtos,
+                k=quantidade_itens,
+            )
+
+            valor_itens = Decimal("0.00")
+
+            for produto in produtos_pedido:
+
+                quantidade = random.randint(1, 4)
+
+                # ------------------------------------------------
+                # DEZEMBRO / BLACK FRIDAY
+                # ------------------------------------------------
+
+                if mes == 11:
+                    quantidade += random.choice(
+                        [0, 1, 1, 2]
+                    )
+
+                elif mes == 12:
+                    quantidade += random.choice(
+                        [0, 1, 2, 2, 3]
+                    )
+
+                preco_unitario = produto.preco_venda
+
+                subtotal = (
+                    preco_unitario
+                    * quantidade
+                )
+
+                item = ItemPedido(
+                    id_pedido=pedido.id_pedido,
+                    id_produto=produto.id_produto,
+                    quantidade=quantidade,
+                    preco_unitario=preco_unitario,
+                    subtotal=subtotal,
+                )
+
+                db.add(item)
+
+                valor_itens += subtotal
+
+                # produto.quantidade_estoque -= quantidade
+
+                itens.append(item)
+
+            pedido.valor_total = (
+                valor_itens
+                + pedido.valor_frete
+            )
+
+            pedidos.append(pedido)
+
+        # Próximo mês
+        if mes == 12:
+            data_atual = date(
+                ano + 1,
+                1,
+                1,
+            )
+        else:
+            data_atual = date(
+                ano,
+                mes + 1,
+                1,
+            )
 
     db.flush()
 
     return pedidos, itens
-
 
 def main():
     db = SessionLocal()
@@ -331,7 +415,6 @@ def main():
 
     finally:
         db.close()
-
 
 if __name__ == "__main__":
     main()
