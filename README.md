@@ -1,129 +1,105 @@
 # Data Sales Platform
 
-Pipeline de Engenharia de Dados desenvolvido em Python para demonstrar, de ponta a ponta, um fluxo de ingestão, qualidade, transformação e construção de um Data Warehouse analítico.
+Plataforma de Engenharia de Dados desenvolvida para demonstrar, de ponta a ponta, a construção de um pipeline de dados para processamento, qualidade, transformação, modelagem dimensional, armazenamento analítico e visualização de indicadores de vendas.
 
-O projeto utiliza PostgreSQL como fonte de dados, Parquet como formato de armazenamento intermediário e um modelo dimensional com dimensões e tabela fato para análise de vendas.
+O projeto utiliza **Python, PostgreSQL, Pandas, Parquet, SQLAlchemy, Alembic, Docker e Streamlit**, aplicando conceitos de **ETL, Data Quality, Data Warehouse, Analytics e BI**.
 
 ---
 
-## 1. Visão geral
+## 🎯 Objetivo
 
-O projeto implementa um pipeline de dados com as seguintes etapas:
+Construir uma plataforma de dados capaz de:
+
+* extrair dados de vendas do PostgreSQL;
+* armazenar os dados brutos em formato Parquet;
+* executar validações de qualidade;
+* transformar os dados para consumo analítico;
+* construir dimensões e tabela fato;
+* disponibilizar o Data Warehouse em Parquet;
+* carregar o Data Warehouse no PostgreSQL;
+* executar consultas analíticas;
+* disponibilizar indicadores através de um dashboard Streamlit;
+* executar testes automatizados;
+* permitir a execução completa do processo através de Docker.
+
+O projeto foi estruturado com foco em **boas práticas de Engenharia de Dados, organização de código, testes, observabilidade e reprodutibilidade**.
+
+---
+
+# 🏗️ Arquitetura
 
 ```text
-PostgreSQL
-    │
-    ▼
-Ingestion
-    │
-    ▼
-data/raw
-    │
-    ▼
-Data Quality
-    │
-    ▼
-Transformation
-    │
-    ▼
-data/processed
-    │
-    ▼
-Data Warehouse
-    ├── dim_cliente
-    ├── dim_produto
-    ├── dim_data
-    └── fact_vendas
-```
-
-O pipeline pode ser executado diretamente no ambiente Python ou completamente utilizando Docker.
-
----
-
-## 2. Objetivo
-
-O objetivo do projeto é construir um pipeline de dados completo, reproduzível e testável, aplicando conceitos fundamentais de Engenharia de Dados:
-
-* Ingestão de dados;
-* Processamento e transformação;
-* Data Quality;
-* Armazenamento em Parquet;
-* Modelagem dimensional;
-* Construção de tabelas fato e dimensões;
-* Observabilidade através de logs;
-* Métricas de execução;
-* Testes automatizados;
-* Containerização com Docker;
-* Migrações de banco de dados;
-* Preparação para futura orquestração.
-
-O projeto também funciona como portfólio técnico para demonstrar conhecimentos práticos de Engenharia de Dados e Backend Python.
-
----
-
-## 3. Arquitetura
-
-### Arquitetura atual
-
-```text
-                         ┌─────────────────────┐
-                         │     PostgreSQL 16   │
-                         │                     │
-                         │ cliente             │
-                         │ produto             │
-                         │ pedido              │
-                         │ item_pedido         │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │     Ingestion       │
-                         │ PostgreSQL → Pandas │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │      data/raw       │
-                         │      Parquet        │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │    Data Quality     │
-                         │                     │
-                         │ Schema              │
-                         │ Not Null            │
-                         │ Unique              │
-                         │ Non Negative       │
-                         │ Positive            │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   Transformation    │
-                         │    Raw → Processed  │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   data/processed    │
-                         │       Parquet       │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                    ┌───────────────────────────────┐
-                    │        Data Warehouse         │
-                    │                               │
-                    │  dim_cliente                  │
-                    │  dim_produto                  │
-                    │  dim_data                    │
-                    │  fact_vendas                  │
-                    └───────────────────────────────┘
+                    ┌─────────────────────┐
+                    │     PostgreSQL      │
+                    │   Dados de origem   │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │      Ingestion      │
+                    │   PostgreSQL →      │
+                    │       Parquet       │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │     data/raw        │
+                    │    Dados brutos      │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    Data Quality     │
+                    │ Validação dos dados │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   Transformation    │
+                    │ Tratamento e        │
+                    │ transformação       │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   data/processed    │
+                    │ Dados processados   │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+              ┌──────────────────────────────────┐
+              │         Data Warehouse            │
+              │                                  │
+              │ dim_cliente                      │
+              │ dim_produto                      │
+              │ dim_data                         │
+              │ fact_vendas                      │
+              └───────────────┬──────────────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+          ┌─────────────────┐   ┌─────────────────┐
+          │ Parquet         │   │ PostgreSQL      │
+          │ Warehouse       │   │ Data Warehouse  │
+          └────────┬────────┘   └────────┬────────┘
+                   │                     │
+                   └──────────┬──────────┘
+                              ▼
+                    ┌─────────────────────┐
+                    │      Analytics      │
+                    │ Queries + Services  │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │ Streamlit Dashboard │
+                    │   dashboard/app.py  │
+                    └─────────────────────┘
 ```
 
 ---
 
-## 4. Fluxo do pipeline
+# 🔄 Pipeline ETL
 
 O pipeline principal está implementado em:
 
@@ -131,543 +107,143 @@ O pipeline principal está implementado em:
 src/pipeline.py
 ```
 
-A execução possui sete etapas:
+O processo é dividido em **8 etapas**:
 
 ### 1. Ingestion
 
-Extrai os dados do PostgreSQL e grava os dados em arquivos Parquet:
-
 ```text
-PostgreSQL
-    ↓
-data/raw/
+PostgreSQL → data/raw
 ```
 
-Tabelas:
-
-* `cliente`
-* `produto`
-* `pedido`
-* `item_pedido`
+Responsável por extrair os dados da origem e armazená-los em arquivos Parquet.
 
 ---
 
 ### 2. Data Quality
 
-Valida os dados antes do processamento.
+Validação dos dados brutos antes do processamento.
 
-São realizadas verificações de:
-
-* existência das colunas obrigatórias;
-* valores nulos;
-* valores negativos;
-* valores que devem ser positivos;
-* duplicidade de identificadores;
-* chaves únicas.
-
-Caso uma validação falhe, o pipeline interrompe a execução.
+```text
+data/raw
+   ↓
+Data Quality
+```
 
 ---
 
 ### 3. Transformation
 
-Transforma os dados da camada `raw` para a camada `processed`.
+Transformação e preparação dos dados para utilização no Data Warehouse.
 
 ```text
 data/raw
-    ↓
+   ↓
 Transformation
-    ↓
+   ↓
 data/processed
 ```
-
-Cada entidade possui sua própria transformação.
 
 ---
 
 ### 4. Dimensão Cliente
 
-Cria:
+Construção da dimensão:
 
 ```text
-data/warehouse/dim_cliente.parquet
-```
-
-A dimensão contém:
-
-* `id_cliente`
-* `nome`
-* `cidade`
-* `estado`
-
-Resultado atual:
-
-```text
-10 registros
+dim_cliente
 ```
 
 ---
 
 ### 5. Dimensão Produto
 
-Cria:
+Construção da dimensão:
 
 ```text
-data/warehouse/dim_produto.parquet
-```
-
-A dimensão contém informações como:
-
-* produto;
-* categoria;
-* subcategoria;
-* preço de venda;
-* preço de custo.
-
-Resultado atual:
-
-```text
-20 registros
+dim_produto
 ```
 
 ---
 
 ### 6. Dimensão Data
 
-Cria:
+Construção da dimensão:
 
 ```text
-data/warehouse/dim_data.parquet
-```
-
-A dimensão possui atributos derivados da data:
-
-* data;
-* ano;
-* mês;
-* nome do mês;
-* trimestre;
-* dia;
-* dia da semana;
-* nome do dia da semana.
-
-Resultado atual:
-
-```text
-15 registros
+dim_data
 ```
 
 ---
 
 ### 7. Fact Vendas
 
-A tabela fato é construída a partir dos pedidos e itens de pedidos, enriquecidos pelas dimensões.
-
-Arquivo:
-
-```text
-data/warehouse/fact_vendas.parquet
-```
-
-A tabela contém informações como:
-
-* pedido;
-* cliente;
-* produto;
-* data;
-* quantidade;
-* preço unitário;
-* subtotal;
-* custo total;
-* receita;
-* lucro;
-* margem;
-* frete;
-* status do pedido;
-* forma de pagamento.
-
-Resultado atual:
-
-```text
-30 registros
-```
-
----
-
-## 5. Modelo dimensional
-
-O Data Warehouse utiliza uma abordagem baseada em modelo dimensional.
-
-```text
-                    dim_cliente
-                         │
-                         │
-                         ▼
-dim_data ────────── fact_vendas ────────── dim_produto
-```
-
-### Dimensões
-
-```text
-dim_cliente
-dim_produto
-dim_data
-```
-
-### Fato
+Construção da tabela fato:
 
 ```text
 fact_vendas
 ```
 
-A `fact_vendas` contém as métricas utilizadas para análise comercial.
+---
 
-Exemplos:
+### 8. PostgreSQL Data Warehouse
+
+Os arquivos Parquet produzidos pelo Data Warehouse são carregados novamente no PostgreSQL através do módulo:
 
 ```text
-receita
-custo_total
-lucro
-margem
-quantidade
+src/warehouse/postgres_loader.py
 ```
+
+Dessa forma, o PostgreSQL passa a disponibilizar uma camada analítica estruturada para as consultas do projeto.
 
 ---
 
-## 6. Cálculos analíticos
+# 🧰 Tecnologias
 
-A tabela fato calcula indicadores básicos de vendas.
-
-### Custo total
-
-```text
-custo_total =
-    preco_custo × quantidade
-```
-
-### Receita
-
-```text
-receita =
-    subtotal
-```
-
-### Lucro
-
-```text
-lucro =
-    receita - custo_total
-```
-
-### Margem
-
-```text
-margem =
-    lucro / receita
-```
-
-Essas métricas permitem utilizar o Data Warehouse posteriormente para análises como:
-
-* receita por produto;
-* lucro por produto;
-* margem por categoria;
-* vendas por cliente;
-* vendas por período;
-* produtos mais vendidos.
+| Tecnologia     | Utilização                             |
+| -------------- | -------------------------------------- |
+| Python 3.11    | Linguagem principal                    |
+| PostgreSQL 16  | Banco de dados                         |
+| Pandas         | Manipulação e transformação de dados   |
+| PyArrow        | Processamento de Parquet               |
+| SQLAlchemy     | Acesso ao banco                        |
+| Alembic        | Migrações                              |
+| Pytest         | Testes automatizados                   |
+| Streamlit      | Dashboard                              |
+| Docker         | Containerização                        |
+| Docker Compose | Orquestração local                     |
+| Python-dotenv  | Configuração por variáveis de ambiente |
 
 ---
 
-## 7. Data Quality
-
-A camada de qualidade está implementada em:
-
-```text
-src/quality/parquet_quality.py
-```
-
-As validações atuais incluem:
-
-### Schema
-
-Verificação das colunas obrigatórias.
-
-### Not Null
-
-Verificação de valores nulos em campos obrigatórios.
-
-### Valores não negativos
-
-Aplicada a campos como:
-
-```text
-preco_venda
-preco_custo
-quantidade_estoque
-valor_total
-valor_frete
-preco_unitario
-subtotal
-```
-
-### Valores positivos
-
-Aplicada principalmente à quantidade dos itens:
-
-```text
-quantidade > 0
-```
-
-### Unicidade
-
-Verificação de duplicidade em identificadores e campos únicos.
-
----
-
-## 8. Observabilidade
-
-O projeto possui logging centralizado através de:
-
-```text
-src/utils/logger.py
-```
-
-Os logs são enviados para:
-
-```text
-console
-logs/pipeline.log
-```
-
-Exemplo:
-
-```text
-2026-08-25 17:59:51 | INFO | ingestion |
-cliente: 10 registros -> data/raw/cliente.parquet
-```
-
-O pipeline também registra métricas de execução através de:
-
-```text
-src/utils/metrics.py
-```
-
-São registrados:
-
-* início da etapa;
-* término da etapa;
-* duração da etapa;
-* quantidade de registros;
-* duração total do pipeline.
-
-Exemplo:
-
-```text
-Etapa concluída | step=7/7 - Fact Vendas | duration=0.14s
-Pipeline finalizado | duration=0.60s
-```
-
----
-
-## 9. Métricas atuais
-
-Uma execução completa apresentou:
-
-| Etapa            | Registros |
-| ---------------- | --------: |
-| Clientes         |        10 |
-| Produtos         |        20 |
-| Pedidos          |        15 |
-| Itens de pedido  |        30 |
-| Ingestion        |        75 |
-| Data Quality     |        75 |
-| Dimensão Cliente |        10 |
-| Dimensão Produto |        20 |
-| Dimensão Data    |        15 |
-| Fact Vendas      |        30 |
-
-Tempo total observado em execução Docker:
-
-```text
-0.60s
-```
-
----
-
-## 10. Testes automatizados
-
-O projeto possui testes automatizados utilizando `pytest`.
-
-Execução:
-
-```bash
-python -m pytest -q
-```
-
-Resultado atual:
-
-```text
-171 passed
-```
-
-Os testes cobrem diferentes componentes do projeto, incluindo:
-
-* banco de dados;
-* modelos;
-* API;
-* transformações;
-* Data Quality;
-* pipeline;
-* warehouse;
-* integração.
-
-A execução dos testes também é utilizada no CI.
-
----
-
-## 11. Banco de dados
-
-O banco utilizado é:
-
-```text
-PostgreSQL 16
-```
-
-As principais tabelas são:
-
-```text
-cliente
-produto
-pedido
-item_pedido
-```
-
-O acesso é realizado através de:
-
-```text
-SQLAlchemy
-```
-
-As alterações estruturais do banco são controladas através de:
-
-```text
-Alembic
-```
-
----
-
-## 12. Seed de dados
-
-Para facilitar testes e demonstrações, o projeto possui um script de carga inicial:
-
-```text
-scripts/seed_database.py
-```
-
-Execução:
-
-```bash
-python -m scripts.seed_database
-```
-
-O seed cria:
-
-```text
-10 clientes
-20 produtos
-15 pedidos
-30 itens de pedido
-```
-
-Os dados são propositalmente pequenos para permitir execução rápida e previsível do pipeline.
-
----
-
-## 13. Docker
-
-O projeto possui Docker Compose para executar o PostgreSQL e o pipeline.
-
-Serviços atuais:
-
-```text
-postgres
-pipeline
-```
-
-O PostgreSQL é executado em:
-
-```text
-localhost:5433
-```
-
-Dentro da rede Docker, o pipeline acessa o banco através de:
-
-```text
-postgres:5432
-```
-
-### Build da imagem
-
-```bash
-docker compose build pipeline
-```
-
-### Execução do pipeline
-
-```bash
-docker compose up pipeline
-```
-
-O fluxo executado pelo container é:
-
-```text
-Alembic
-    ↓
-Seed
-    ↓
-Pipeline
-```
-
-O pipeline é executado completamente dentro do container.
-
-Os diretórios de dados e logs são montados como volumes:
-
-```text
-data/
-logs/
-```
-
-Isso permite visualizar os arquivos gerados pelo pipeline no ambiente local.
-
----
-
-## 14. Estrutura do projeto
+# 📁 Estrutura do projeto
 
 ```text
 data-sales-platform/
 │
-├── .github/
-│   └── workflows/
-│       └── ...
+├── dashboard/
+│   └── app.py
 │
 ├── data/
 │   ├── raw/
 │   ├── processed/
 │   └── warehouse/
 │
-├── database/
-│
 ├── logs/
 │
 ├── migrations/
+│   ├── versions/
+│   └── env.py
 │
 ├── scripts/
 │   └── seed_database.py
 │
 ├── src/
-│   │
-│   ├── api/
+│   ├── analytics/
+│   │   ├── queries.py
+│   │   └── service.py
 │   │
 │   ├── database/
+│   │   └── connection.py
 │   │
 │   ├── ingestion/
 │   │   └── postgres_to_parquet.py
@@ -676,17 +252,14 @@ data-sales-platform/
 │   │   └── parquet_quality.py
 │   │
 │   ├── transformation/
-│   │   ├── cliente_transformation.py
-│   │   ├── produto_transformation.py
-│   │   ├── pedido_transformation.py
-│   │   ├── item_pedido_transformation.py
 │   │   └── raw_to_processed.py
 │   │
 │   ├── warehouse/
 │   │   ├── dim_cliente.py
 │   │   ├── dim_produto.py
 │   │   ├── dim_data.py
-│   │   └── fact_vendas.py
+│   │   ├── fact_vendas.py
+│   │   └── postgres_loader.py
 │   │
 │   ├── utils/
 │   │   ├── logger.py
@@ -696,8 +269,8 @@ data-sales-platform/
 │
 ├── tests/
 │
-├── .env.example
-├── .env.test
+├── .env
+├── .gitignore
 ├── alembic.ini
 ├── docker-compose.yml
 ├── Dockerfile
@@ -707,316 +280,565 @@ data-sales-platform/
 
 ---
 
-## 15. Tecnologias
+# ⚙️ Pré-requisitos
 
-### Linguagem
+Para executar o projeto localmente, é necessário ter instalado:
 
-```text
-Python 3.11
+* Python 3.11 ou superior
+* Docker
+* Docker Compose
+* Git
+
+---
+
+# 🚀 Configuração do ambiente
+
+Clone o projeto:
+
+```bash
+git clone <URL_DO_REPOSITORIO>
 ```
 
-### Processamento
+Entre no diretório:
 
-```text
-Pandas
-PyArrow
-```
-
-### Banco de dados
-
-```text
-PostgreSQL 16
-SQLAlchemy
-Alembic
-```
-
-### API
-
-```text
-FastAPI
-Uvicorn
-```
-
-### Testes
-
-```text
-Pytest
-HTTPX
-```
-
-### Infraestrutura
-
-```text
-Docker
-Docker Compose
-```
-
-### Armazenamento
-
-```text
-Parquet
+```bash
+cd data-sales-platform
 ```
 
 ---
 
-## 16. Configuração do ambiente
+## Ambiente virtual Python
 
-### Criar ambiente virtual
+No Windows:
 
-```bash
+```powershell
 python -m venv .venv
 ```
 
-### Ativar no Windows
+Ative o ambiente:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-### Instalar o projeto
+Instale as dependências:
 
-```bash
-pip install -e .
+```powershell
+pip install .
 ```
 
-### Configurar variáveis de ambiente
+---
 
-Copie:
+# 🔐 Configuração das variáveis de ambiente
 
-```text
-.env.example
-```
-
-para:
+Crie um arquivo:
 
 ```text
 .env
 ```
 
-Configure as credenciais do PostgreSQL.
+Exemplo:
+
+```env
+POSTGRES_DB=data_sales
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_PORT=5433
+```
+
+O projeto utiliza o arquivo `.env` para configurar a conexão com o PostgreSQL.
+
+> Não versionar informações reais de acesso ao banco.
 
 ---
 
-## 17. Execução local
+# 🐳 Execução com Docker
 
-Com o PostgreSQL disponível:
+O projeto possui dois serviços:
 
-### Aplicar migrations
+```text
+postgres
+pipeline
+```
 
-```bash
+O serviço PostgreSQL utiliza:
+
+```text
+postgres:16
+```
+
+O pipeline é executado em um container Python 3.11.
+
+Para iniciar o ambiente:
+
+```powershell
+docker compose up --build
+```
+
+O Docker Compose executará automaticamente:
+
+```text
+PostgreSQL
+   ↓
+Health Check
+   ↓
+Alembic
+   ↓
+Seed Database
+   ↓
+Pipeline ETL
+```
+
+O serviço `pipeline` aguarda o PostgreSQL estar saudável antes de iniciar o processamento.
+
+---
+
+# 🔄 Execução automática do Pipeline
+
+O container do pipeline executa:
+
+```text
 alembic upgrade head
-```
-
-### Carregar dados
-
-```bash
+        ↓
 python -m scripts.seed_database
-```
-
-### Executar o pipeline
-
-```bash
+        ↓
 python -m src.pipeline
 ```
 
-O pipeline produzirá:
+Isso significa que, em uma execução completa do ambiente, as migrações são aplicadas, os dados de demonstração são preparados e o pipeline ETL é executado.
+
+---
+
+# ▶️ Executando o Pipeline manualmente
+
+Com o ambiente Python ativado:
+
+```powershell
+python -m src.pipeline
+```
+
+O pipeline executará as oito etapas:
 
 ```text
-data/raw/
-data/processed/
-data/warehouse/
+1/8 - Ingestion
+2/8 - Data Quality
+3/8 - Transformation
+4/8 - Dimensão Cliente
+5/8 - Dimensão Produto
+6/8 - Dimensão Data
+7/8 - Fact Vendas
+8/8 - PostgreSQL Data Warehouse
+```
+
+---
+
+# 🗄️ Data Warehouse
+
+O Data Warehouse utiliza um modelo dimensional composto por:
+
+```text
+dim_cliente
+dim_produto
+dim_data
+fact_vendas
+```
+
+### Dimensão Cliente
+
+Contém as informações relacionadas aos clientes.
+
+```text
+dim_cliente
+```
+
+### Dimensão Produto
+
+Contém as informações relacionadas aos produtos.
+
+```text
+dim_produto
+```
+
+### Dimensão Data
+
+Fornece a dimensão temporal utilizada pelas análises.
+
+```text
+dim_data
+```
+
+### Fato Vendas
+
+Centraliza os indicadores relacionados às vendas.
+
+```text
+fact_vendas
+```
+
+A tabela fato contém informações necessárias para análises de:
+
+* quantidade;
+* receita;
+* custo;
+* lucro;
+* margem;
+* produto;
+* cliente;
+* período.
+
+---
+
+# 📊 Data Quality
+
+A qualidade dos dados é executada antes da transformação.
+
+O projeto possui uma etapa específica:
+
+```text
+src/quality/parquet_quality.py
+```
+
+Essa etapa permite identificar problemas nos dados antes que eles sejam disponibilizados para o Data Warehouse.
+
+Entre as validações utilizadas no projeto estão verificações relacionadas a:
+
+* valores nulos;
+* duplicidades;
+* consistência dos dados;
+* integridade dos registros;
+* regras relacionadas aos dados financeiros.
+
+---
+
+# 🔎 Analytics
+
+A camada analítica está localizada em:
+
+```text
+src/analytics/
+```
+
+Principais componentes:
+
+```text
+queries.py
+service.py
+```
+
+### Queries
+
+Responsável pelas consultas utilizadas para obter os indicadores analíticos.
+
+### Services
+
+Responsável por disponibilizar uma camada de serviço entre as consultas e o dashboard.
+
+Entre os indicadores disponibilizados estão:
+
+* vendas;
+* receita;
+* lucro;
+* margem;
+* vendas por produto;
+* vendas por cliente;
+* evolução mensal;
+* análise por período.
+
+---
+
+# 📈 Dashboard
+
+O projeto possui um dashboard desenvolvido com Streamlit.
+
+Arquivo principal:
+
+```text
+dashboard/app.py
+```
+
+Para executar:
+
+```powershell
+streamlit run dashboard/app.py
+```
+
+O dashboard permite selecionar o período de análise e visualizar indicadores de vendas.
+
+### Indicadores
+
+São apresentados indicadores como:
+
+```text
+Quantidade
+Receita
+Lucro
+Margem
+```
+
+### Análises
+
+O dashboard apresenta:
+
+* evolução mensal das vendas;
+* vendas por produto;
+* detalhes dos produtos;
+* margem por produto;
+* vendas por cliente;
+* detalhes dos clientes.
+
+---
+
+# 🧪 Testes
+
+Os testes automatizados são executados utilizando Pytest.
+
+Para executar:
+
+```powershell
+pytest
+```
+
+O projeto possui testes unitários e testes de integração.
+
+Para executar especificamente os testes de integração:
+
+```powershell
+pytest -m integration
+```
+
+Os testes têm como objetivo validar componentes individuais e também o funcionamento integrado do pipeline.
+
+---
+
+# 📐 Resultados atuais
+
+Na versão atual do projeto, o Data Warehouse apresenta:
+
+| Tabela      | Registros |
+| ----------- | --------: |
+| dim_cliente |        10 |
+| dim_produto |        20 |
+| dim_data    |        15 |
+| fact_vendas |     2.909 |
+
+Indicadores financeiros atualmente validados:
+
+| Indicador            |       Resultado |
+| -------------------- | --------------: |
+| Receita total        | R$ 7.475.020,30 |
+| Custo total          | R$ 5.547.000,00 |
+| Lucro total          | R$ 1.928.020,30 |
+| Margem média         |          31,31% |
+| Receita igual a zero |               0 |
+| IDs duplicados       |               0 |
+| Nulos críticos       |               0 |
+
+Esses números representam a execução atual do pipeline e podem mudar caso a massa de dados seja alterada.
+
+---
+
+# 🗃️ Banco de dados e Alembic
+
+O projeto utiliza **Alembic** para controle de evolução do banco de dados.
+
+As migrações ficam em:
+
+```text
+migrations/versions/
+```
+
+Para aplicar as migrações:
+
+```powershell
+alembic upgrade head
+```
+
+Para verificar a versão atual:
+
+```powershell
+alembic current
+```
+
+Para visualizar o histórico:
+
+```powershell
+alembic history
+```
+
+---
+
+# 📝 Logs
+
+O pipeline possui mecanismo de logging através de:
+
+```text
+src/utils/logger.py
+```
+
+As métricas de execução são controladas por:
+
+```text
+src/utils/metrics.py
+```
+
+Cada etapa do pipeline possui medição de tempo, permitindo acompanhar a execução do processo.
+
+Os logs são armazenados no diretório:
+
+```text
 logs/
 ```
 
 ---
 
-## 18. Execução com Docker
+# 🔁 Como reproduzir o projeto do zero
 
-Subir o PostgreSQL:
+Uma nova máquina pode executar o projeto seguindo o fluxo abaixo.
 
-```bash
-docker compose up -d postgres
+### 1. Clonar o projeto
+
+```powershell
+git clone <URL_DO_REPOSITORIO>
+cd data-sales-platform
 ```
 
-Construir a imagem:
+### 2. Criar o `.env`
 
-```bash
-docker compose build pipeline
+```env
+POSTGRES_DB=data_sales
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_PORT=5433
 ```
 
-Executar o pipeline:
+### 3. Subir o ambiente
 
-```bash
-docker compose up pipeline
+```powershell
+docker compose up --build
+```
+
+### 4. Verificar o pipeline
+
+Os logs podem ser acompanhados através do Docker:
+
+```powershell
+docker compose logs -f pipeline
+```
+
+### 5. Executar o dashboard
+
+Com o ambiente Python configurado:
+
+```powershell
+streamlit run dashboard/app.py
+```
+
+### 6. Executar os testes
+
+```powershell
+pytest
 ```
 
 ---
 
-## 19. Validação do resultado
+# 🧠 Decisões arquiteturais
 
-Após a execução, os arquivos esperados no warehouse são:
+## Por que Parquet?
+
+O projeto utiliza Parquet como formato intermediário e de armazenamento porque ele é adequado para workloads analíticos e processamento de dados tabulares.
+
+O uso de Parquet também permite separar as diferentes etapas do pipeline:
 
 ```text
-data/warehouse/
-├── dim_cliente.parquet
-├── dim_produto.parquet
-├── dim_data.parquet
-└── fact_vendas.parquet
-```
-
-Quantidade atual esperada:
-
-```text
-dim_cliente.parquet → 10
-dim_produto.parquet → 20
-dim_data.parquet    → 15
-fact_vendas.parquet → 30
+raw
+processed
+warehouse
 ```
 
 ---
 
-## 20. CI/CD
+## Por que PostgreSQL?
 
-O projeto possui pipeline de integração contínua para executar os testes automatizados.
+O PostgreSQL é utilizado tanto como fonte dos dados quanto como camada final do Data Warehouse.
 
-O objetivo é garantir que alterações no código não introduzam regressões.
-
-A validação atual do projeto apresenta:
+Essa abordagem permite demonstrar:
 
 ```text
-171 testes aprovados
-```
-
----
-
-## 21. Decisões técnicas
-
-### PostgreSQL
-
-Escolhido como banco relacional de origem por ser amplamente utilizado em ambientes corporativos e adequado para demonstrar integração com sistemas transacionais.
-
-### Parquet
-
-Utilizado como formato de armazenamento por ser eficiente para processamento analítico e integração com ferramentas de dados.
-
-### Pandas
-
-Utilizado para as transformações por oferecer uma API simples para manipulação tabular e integração direta com Parquet.
-
-### Modelo dimensional
-
-A utilização de dimensões e fato demonstra conceitos fundamentais de Data Warehouse e facilita análises posteriores.
-
-### Docker
-
-Utilizado para garantir maior reprodutibilidade do ambiente e reduzir diferenças entre ambientes de execução.
-
-### Pytest
-
-Utilizado para garantir qualidade e permitir evolução segura do projeto.
-
----
-
-## 22. Características de Engenharia de Dados demonstradas
-
-Este projeto demonstra conhecimentos em:
-
-* ETL;
-* ELT;
-* ingestão de dados;
-* processamento batch;
-* armazenamento em Parquet;
-* Data Quality;
-* modelagem dimensional;
-* Data Warehouse;
-* tabelas fato;
-* dimensões;
-* métricas;
-* logging;
-* testes automatizados;
-* integração contínua;
-* Docker;
-* PostgreSQL;
-* SQLAlchemy;
-* Alembic;
-* Python;
-* arquitetura modular.
-
----
-
-## 23. Próximos passos
-
-O projeto continuará evoluindo para uma arquitetura mais próxima de um ambiente profissional.
-
-### Próximas evoluções planejadas
-
-* [ ] Documentar arquitetura detalhadamente;
-* [ ] Separar seed de dados da execução normal do pipeline;
-* [ ] Melhorar tratamento de erros;
-* [ ] Implementar estratégias de retry;
-* [ ] Adicionar mais regras de Data Quality;
-* [ ] Evoluir métricas e observabilidade;
-* [ ] Adicionar análises sobre o Data Warehouse;
-* [ ] Implementar orquestração com Apache Airflow;
-* [ ] Criar DAG do pipeline;
-* [ ] Implementar agendamento;
-* [ ] Implementar dependências entre tarefas;
-* [ ] Implementar retry e controle de falhas no Airflow.
-
----
-
-## 24. Objetivo profissional
-
-Este projeto faz parte de uma jornada prática de evolução para Engenharia de Dados.
-
-A proposta é demonstrar não apenas conhecimento isolado de ferramentas, mas a capacidade de construir um pipeline completo envolvendo:
-
-```text
-Fonte de dados
-      ↓
-Ingestão
-      ↓
-Qualidade
-      ↓
-Transformação
-      ↓
-Armazenamento
-      ↓
-Modelagem dimensional
-      ↓
+OLTP / Fonte
+     ↓
+Processamento
+     ↓
 Data Warehouse
-      ↓
-Observabilidade
-      ↓
-Testes
-      ↓
-Containerização
-      ↓
-Orquestração
+     ↓
+Analytics
 ```
-
-A próxima grande evolução da arquitetura será a introdução de **Apache Airflow** para orquestração do pipeline.
 
 ---
 
-## Status atual
+## Por que Docker?
+
+Docker permite reproduzir o ambiente de execução de forma consistente, reduzindo dependências relacionadas à configuração da máquina.
+
+---
+
+## Por que Streamlit?
+
+Streamlit permite disponibilizar rapidamente uma camada de visualização sobre os dados produzidos pelo pipeline.
+
+Dessa forma, o projeto demonstra não apenas a construção do pipeline, mas também o consumo dos dados por uma aplicação analítica.
+
+---
+
+# 🔮 Próximas evoluções
+
+Possíveis evoluções do projeto:
+
+* implementação de orquestração com Airflow;
+* inclusão de processamento distribuído com Spark;
+* criação de testes de Data Quality mais abrangentes;
+* implementação de CI/CD;
+* monitoramento do pipeline;
+* criação de métricas de observabilidade;
+* execução incremental do pipeline;
+* particionamento dos dados;
+* implementação de estratégia de carga incremental no Data Warehouse;
+* disponibilização da camada analítica através de API;
+* implantação em ambiente cloud;
+* criação de infraestrutura como código.
+
+---
+
+# 💼 Objetivo profissional
+
+Este projeto faz parte do meu portfólio de transição e especialização em **Engenharia de Dados**, demonstrando experiência prática com:
 
 ```text
-Pipeline ETL              ✅
-PostgreSQL                ✅
-Alembic                   ✅
-Data Quality              ✅
-Parquet                   ✅
-Transformation            ✅
-Data Warehouse            ✅
-Fact/Dimensions           ✅
-Logging                   ✅
-Pipeline Metrics          ✅
-Automated Tests           ✅
-CI                        ✅
-Docker                    ✅
-Architecture              🚧
-Airflow                   ⏳
+Python
+SQL
+PostgreSQL
+ETL
+Data Quality
+Parquet
+Data Warehouse
+Modelagem Dimensional
+Analytics
+Docker
+Testes Automatizados
+Streamlit
 ```
 
-**Projeto em evolução contínua.**
+A proposta é demonstrar a capacidade de construir uma solução de dados **de ponta a ponta**, desde a ingestão até a disponibilização dos indicadores para o usuário final.
+
+---
+
+# 👨‍💻 Autor
+
+**Anderson Soares**
+
+Analista de Sistemas Sênior | Integração de Dados | Oracle | Engenharia de Dados | Backend Python
+
+---
+
+## 📌 Licença
+
+Projeto desenvolvido para fins de estudo, demonstração técnica e portfólio profissional.
